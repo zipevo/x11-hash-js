@@ -1,13 +1,13 @@
 # x11-hash-js
 
-> Performs the [x11 hashing](https://docs.dash.org/en/latest/introduction/features.html#x11-hash-algorithm) algorithm used in the [Dash cryptocurrency](https://dash.org) in JavaScript.
+> Performs the [x11 hashing](https://docs.zip.org/en/latest/introduction/features.html#x11-hash-algorithm) algorithm used in the [Zip cryptocurrency](https://zip.org) in JavaScript.
 
 ## Usage
 
 Install the library as a Node module.
 
 ```
-$ npm install --save @dashevo/x11-hash-js
+$ npm install --save @zipevo/x11-hash-js
 ```
 
 Reference the library within a Node module.
@@ -19,7 +19,7 @@ console.log(x11.digest('The great experiment continues.'));
 // -> '4da3b7c5ff698c6546564ebc72204f31885cd87b75b2b3ca5a93b5d75db85b8c'
 ```
 
-Download the browserified library from the [dist](https://github.com/dashpay/x11-hash-js/tree/master/dist) folder and include it in your HTML.
+Download the browserified library from the [dist](https://github.com/zippay/x11-hash-js/tree/master/dist) folder and include it in your HTML.
 
 ```html
 <html>

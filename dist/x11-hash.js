@@ -307,7 +307,7 @@ module.exports.AES_ROUND_NOKEY_LE = function(X, Y) {
 ///////////////  Blake //////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -525,7 +525,7 @@ module.exports = function(input, format, output) {
 //////////////  BMW /////////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -894,7 +894,7 @@ module.exports = function(input, format, output) {
 ////////////  Cubehash //////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -1226,7 +1226,7 @@ module.exports = function(input, format, output) {
 ///////////////  Echo ///////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -1511,7 +1511,7 @@ module.exports = function(input, format, output) {
 ////////////  groestl ///////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -3017,7 +3017,7 @@ module.exports.isBuffer = function(obj) {
 ///////////////  Jh /////////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -4026,7 +4026,7 @@ module.exports = methods;
 //////////////  Luffa ///////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -4974,7 +4974,7 @@ module.exports.xORTable = function(d, s1, s2, len) {
 ////////////  Shavite ///////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
@@ -5668,7 +5668,7 @@ module.exports = function(input, format, output) {
 //////////////  Simd ///////////////
 
 //// Written by Quantum Explorer ////
-////////// Dash Foundation //////////
+////////// Zip Foundation //////////
 /// Released under the MIT License //
 /////////////////////////////////////
 
