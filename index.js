@@ -1,16 +1,12 @@
 'use strict';
 
 var blake = require('./lib/blake');
-var keccak = require('./lib/keccak').keccak_512;
-var skein = require('./lib/skein');
-var luffa = require('./lib/luffa');
-var simd = require('./lib/simd');
-var shavite = require('./lib/shavite');
-var cubehash = require('./lib/cubehash');
-var jh = require('./lib/jh');
-var echo = require('./lib/echo');
-var groestl = require('./lib/groestl');
 var bmw = require('./lib/bmw');
+var groestl = require('./lib/groestl');
+var skein = require('./lib/skein');
+var keccak = require('./lib/keccak').keccak_512;
+var luffa = require('./lib/luffa');
+var echo = require('./lib/echo');
 var h = require('./lib/helper');
 
 /**
@@ -19,33 +15,28 @@ var h = require('./lib/helper');
 var errors = module.exports.errors = {
     input_not_specified: 'input not specified',
     input_single_invalid_type: 'input must be string when inputFormat is not specified',
-    input_format_mismatch_string: 'input format mismatch: input should be an string',
+    input_format_mismatch_string: 'input format mismatch: input should be a string',
     input_format_mismatch_array: 'input format mismatch: input should be an array',
     input_format_invalid: 'invalid input format',
     output_format_invalid: 'invalid output format'
 };
 
 /**
- * Obtain an x11 hash
+ * Obtain an X7 hash
  * @param input {string|array|buffer} input data to hash
- * @param inputFormat {number} optional - format of the input: 0: string, 1: 8 bit array/Buffer, 2: 32 bit array
- * @param outputFormat {number} optional - format of the output: 0: string, 1: 8 bit array, 2: 32 bit array
- * @returns {string|array} x11 hash of input as a string, 8-bit array or 32-bit array
+ * @param timestamp {number} optional - timestamp to include in the hash
+ * @param inputFormat {number} optional - format of the input: 0: string, 1: 8-bit array/Buffer, 2: 32-bit array
+ * @param outputFormat {number} optional - format of the output: 0: string, 1: 8-bit array, 2: 32-bit array
+ * @returns {string|array} X7 hash of input as a string, 8-bit array, or 32-bit array
  */
-module.exports.digest = function (input, inputFormat, outputFormat) {
-
-    // argument exceptions
+module.exports.digest = function (input, timestamp, inputFormat, outputFormat) {
     if (input === undefined) {
         throw (errors.input_not_specified);
     } else if (inputFormat === undefined) {
-
-        // single input arg must be string
         if (!(typeof input === 'string' || input instanceof String)) {
             throw (errors.input_single_invalid_type);
         }
     } else {
-
-        // validate input arguments
         if (inputFormat === 0) {
             if (!(typeof input === 'string' || input instanceof String)) {
                 throw (errors.input_format_mismatch_string);
@@ -57,8 +48,6 @@ module.exports.digest = function (input, inputFormat, outputFormat) {
         } else {
             throw (errors.input_format_invalid);
         }
-
-        // validate output format
         if (outputFormat !== undefined
                 && outputFormat !== 0
                 && outputFormat !== 1
@@ -67,33 +56,54 @@ module.exports.digest = function (input, inputFormat, outputFormat) {
         }
     }
 
-    // obtain the x11 hash of the input
-    var a = blake(input, inputFormat, 2);
+    // Incorporate the timestamp into the initial data
+    var a = h.int64ToBuffer(timestamp);
+    a = blake(a.concat(input), 1, 2);
     a = bmw(a, 2, 2);
+
+    // XOR operation between Blake512 and BMW512
+    a = xorArrays(blake(a, 2, 2), a);
+
     a = groestl(a, 2, 2);
     a = skein(a, 2, 2);
-    a = jh(a, 2, 2);
-    a = this.keccak(a, 2, 1);
-    a = luffa(a, 1, 2);
-    a = cubehash(a, 2, 2);
-    a = shavite(a, 2, 2);
-    a = simd(a, 2, 2);
-    a = echo(a, 2, 2);
-    a = a.slice(0, 8);
 
-    // output 32-bit array
+    // XOR operation between Groestl512 and Skein512
+    a = xorArrays(groestl(a, 2, 2), a);
+
+    a = keccak(a, 2, 2);
+    a = luffa(a, 2, 2);
+    a = echo(a, 2, 2);
+
+    // Final XOR operation between Luffa512 and Echo512
+    a = xorArrays(luffa(a, 2, 2), a);
+
+    // Output 32-bit array
     if (outputFormat === 2) {
         return h.int32Buffer2Bytes(a);
     }
-    // output 8-bit array
+    // Output 8-bit array
     else if (outputFormat === 1) {
         return a;
     }
-    // output string
+    // Output string
     return h.int32ArrayToHexString(a);
 };
 
-// individual x11 hash functions...
+/**
+ * XOR two arrays element by element
+ * @param arr1 {array} first array
+ * @param arr2 {array} second array
+ * @returns {array} result of XOR operation
+ */
+function xorArrays(arr1, arr2) {
+    var result = [];
+    for (var i = 0; i < arr1.length; i++) {
+        result.push(arr1[i] ^ arr2[i]);
+    }
+    return result;
+}
+
+// Individual X7 hash functions
 module.exports.blake = function (str, format, output) {
     return blake(str, format, output);
 };
@@ -102,20 +112,12 @@ module.exports.bmw = function (str, format, output) {
     return bmw(str, format, output);
 };
 
-module.exports.cubehash = function (str, format, output) {
-    return cubehash(str, format, output);
-};
-
-module.exports.echo = function (str, format, output) {
-    return echo(str, format, output);
-};
-
 module.exports.groestl = function (str, format, output) {
     return groestl(str, format, output);
 };
 
-module.exports.jh = function (str, format, output) {
-    return jh(str, format, output);
+module.exports.skein = function (str, format, output) {
+    return skein(str, format, output);
 };
 
 module.exports.keccak = function (str, format, output) {
@@ -129,21 +131,12 @@ module.exports.keccak = function (str, format, output) {
         return h.bytes2Int32Buffer(keccak.array(msg));
     }
     return keccak.hex(msg);
-
 };
 
 module.exports.luffa = function (str, format, output) {
     return luffa(str, format, output);
 };
 
-module.exports.shavite = function (str, format, output) {
-    return shavite(str, format, output);
-};
-
-module.exports.simd = function (str, format, output) {
-    return simd(str, format, output);
-};
-
-module.exports.skein = function (str, format, output) {
-    return skein(str, format, output);
+module.exports.echo = function (str, format, output) {
+    return echo(str, format, output);
 };
