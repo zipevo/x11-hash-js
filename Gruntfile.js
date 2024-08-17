@@ -22,11 +22,11 @@ module.exports = function (grunt) {
         browserify: {
             main: {
                 files: {
-                    'dist/x11-hash.js': ['lib']
+                    'dist/x7-hash.js': ['lib']
                 },
                 options: {
                   require: [
-                      './index.js:x11hash',
+                      './index.js:x7hash',
                       'buffer'
                   ]
                 }
@@ -74,7 +74,7 @@ module.exports = function (grunt) {
             karmaDebug: {
                 options: {
                     config: {
-                        targetBundle: 'dist/x11-hash.js'
+                        targetBundle: 'dist/x7-hash.js'
                     },
                     tasks: ['karma']
                 }
@@ -82,7 +82,7 @@ module.exports = function (grunt) {
             karmaMin: {
                 options: {
                     config: {
-                        targetBundle: 'dist/x11-hash.min.js'
+                        targetBundle: 'dist/x7-hash.min.js'
                     },
                     tasks: ['karma']
                 }
@@ -92,7 +92,7 @@ module.exports = function (grunt) {
         uglify: {
             my_target: {
                 files: {
-                    'dist/x11-hash.min.js': ['dist/x11-hash.js']
+                    'dist/x7-hash.min.js': ['dist/x7-hash.js']
                 }
             }
         }
