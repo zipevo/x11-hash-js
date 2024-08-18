@@ -31,62 +31,69 @@ var errors = module.exports.errors = {
  */
 module.exports.digest = function (input, timestamp, inputFormat, outputFormat) {
     if (input === undefined) {
-        throw (errors.input_not_specified);
+        throw errors.input_not_specified;
     } else if (inputFormat === undefined) {
         if (!(typeof input === 'string' || input instanceof String)) {
-            throw (errors.input_single_invalid_type);
+            throw errors.input_single_invalid_type;
         }
     } else {
         if (inputFormat === 0) {
             if (!(typeof input === 'string' || input instanceof String)) {
-                throw (errors.input_format_mismatch_string);
+                throw errors.input_format_mismatch_string;
             }
         } else if (inputFormat === 1 || inputFormat === 2) {
             if (!Array.isArray(input) && !h.isBuffer(input)) {
-                throw (errors.input_format_mismatch_array);
+                throw errors.input_format_mismatch_array;
             }
         } else {
-            throw (errors.input_format_invalid);
+            throw errors.input_format_invalid;
         }
         if (outputFormat !== undefined
                 && outputFormat !== 0
                 && outputFormat !== 1
                 && outputFormat !== 2) {
-            throw (errors.output_format_invalid);
+            throw errors.output_format_invalid;
         }
     }
 
-    // Incorporate the timestamp into the initial data
-    var a = h.int64ToBuffer(timestamp);
-    a = blake(a.concat(input), 1, 2);
+    // Incorporate the timestamp into the initial data if provided
+    var a = input;
+    if (timestamp !== undefined) {
+        a = h.int64ToBuffer(timestamp).concat(input);
+    }
+
+    a = blake(a, inputFormat, 2);
     a = bmw(a, 2, 2);
 
-    // XOR operation between Blake512 and BMW512
+    // XOR operation between Blake and BMW
     a = xorArrays(blake(a, 2, 2), a);
 
     a = groestl(a, 2, 2);
     a = skein(a, 2, 2);
 
-    // XOR operation between Groestl512 and Skein512
+    // XOR operation between Groestl and Skein
     a = xorArrays(groestl(a, 2, 2), a);
 
     a = keccak(a, 2, 2);
     a = luffa(a, 2, 2);
     a = echo(a, 2, 2);
 
-    // Final XOR operation between Luffa512 and Echo512
+    // Final XOR operation between Luffa and Echo
     a = xorArrays(luffa(a, 2, 2), a);
+
+    // Slice to ensure the output size is consistent
+    var outputSize = outputFormat === 2 ? 32 : outputFormat === 1 ? 64 : a.length;
 
     // Output 32-bit array
     if (outputFormat === 2) {
-        return h.int32Buffer2Bytes(a);
+        return h.int32Buffer2Bytes(a.slice(0, outputSize));
     }
     // Output 8-bit array
     else if (outputFormat === 1) {
-        return a;
+        return a.slice(0, outputSize);
     }
     // Output string
-    return h.int32ArrayToHexString(a);
+    return h.int32ArrayToHexString(a.slice(0, outputSize));
 };
 
 /**
