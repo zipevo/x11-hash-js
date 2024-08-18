@@ -18,7 +18,8 @@ var errors = module.exports.errors = {
     input_format_mismatch_string: 'input format mismatch: input should be a string',
     input_format_mismatch_array: 'input format mismatch: input should be an array',
     input_format_invalid: 'invalid input format',
-    output_format_invalid: 'invalid output format'
+    output_format_invalid: 'invalid output format',
+    timestamp_invalid: 'timestamp must be a valid number'
 };
 
 /**
@@ -32,51 +33,54 @@ var errors = module.exports.errors = {
 module.exports.digest = function (input, inputFormat, outputFormat, timestamp) {
     // Argument exceptions
     if (input === undefined) {
-        throw errors.input_not_specified;
+        throw (errors.input_not_specified);
     } else if (inputFormat === undefined) {
         // Single input arg must be a string
-        if (typeof input !== 'string') {
-            throw errors.input_single_invalid_type;
+        if (!(typeof input === 'string' || input instanceof String)) {
+            throw (errors.input_single_invalid_type);
         }
     } else {
         // Validate input arguments
         if (inputFormat === 0) {
-            if (typeof input !== 'string') {
-                throw errors.input_format_mismatch_string;
+            if (!(typeof input === 'string' || input instanceof String)) {
+                throw (errors.input_format_mismatch_string);
             }
         } else if (inputFormat === 1 || inputFormat === 2) {
             if (!Array.isArray(input) && !h.isBuffer(input)) {
-                throw errors.input_format_mismatch_array;
+                throw (errors.input_format_mismatch_array);
             }
         } else {
-            throw errors.input_format_invalid;
+            throw (errors.input_format_invalid);
         }
 
         // Validate output format
-        if (outputFormat !== undefined && ![0, 1, 2].includes(outputFormat)) {
-            throw errors.output_format_invalid;
-       }
+        if (outputFormat !== undefined
+            && outputFormat !== 0
+            && outputFormat !== 1
+            && outputFormat !== 2) {
+            throw (errors.output_format_invalid);
+        }
     }
 
-    // Incorporate the timestamp into the input
-var timestampBuffer = Buffer.alloc(8);
-timestampBuffer.writeBigUInt64LE(BigInt(timestamp), 0);
-    var inputBuffer;
-    if (typeof input === 'string') {
-        inputBuffer = Buffer.from(input);
-    } else if (Array.isArray(input)) {
-        inputBuffer = Buffer.from(input);
-    } else if (h.isBuffer(input)) {
-        inputBuffer = Buffer.from(input);
+    // Check and handle the timestamp
+    let timestampBuffer;
+    if (timestamp !== undefined) {
+        if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
+            throw (errors.timestamp_invalid);
+        }
+        timestampBuffer = Buffer.alloc(8);
+        try {
+            timestampBuffer.writeBigUInt64LE(BigInt(timestamp), 0);
+        } catch (err) {
+            throw new Error('Failed to write timestamp to buffer: ' + err.message);
+        }
     } else {
-        throw new Error('Invalid input type');
+        // Default to an empty buffer if no timestamp is provided
+        timestampBuffer = Buffer.alloc(8);
     }
-
-    // Prepend the timestamp to the input data
-    var combinedInput = Buffer.concat([timestampBuffer, inputBuffer]);
 
     // Obtain the x7 hash of the input
-    var hash = blake(combinedInput, 1, 2);
+    var hash = blake(Buffer.concat([timestampBuffer, Buffer.from(input)]), 1, 2);
     hash = bmw(hash, 2, 2);
     hash = xor(hash, bmw(hash, 2, 2));
     hash = groestl(hash, 2, 2);
@@ -95,7 +99,7 @@ timestampBuffer.writeBigUInt64LE(BigInt(timestamp), 0);
     }
     // Output 8-bit array
     else if (outputFormat === 1) {
-        return Array.from(hash); // Ensure it returns an 8-bit array
+        return hash;
     }
     // Output string
     return h.int32ArrayToHexString(hash);
@@ -103,9 +107,6 @@ timestampBuffer.writeBigUInt64LE(BigInt(timestamp), 0);
 
 // XOR function for use in x7 hash stages
 function xor(a, b) {
-    if (a.length !== b.length) {
-        throw new Error('Buffers must be of the same length for XOR');
-    }
     return a.map((value, index) => value ^ b[index]);
 }
 
